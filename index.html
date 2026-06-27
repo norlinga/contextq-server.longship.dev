@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>contextq-server — contextq over HTTPS for remote agents</title>
+  <meta name="description" content="contextq-server makes your contextq queues available over HTTPS — namespace-isolated, bearer-key authenticated, and backed by the same filesystem journals.">
+  <meta property="og:title" content="contextq-server — contextq over HTTPS for remote agents">
+  <meta property="og:description" content="contextq-server makes your contextq queues available over HTTPS — namespace-isolated, bearer-key authenticated, deployable on any Linux VPS.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="min-h-screen">
+
+  <!-- ───── Sticky Nav ───── -->
+  <nav class="nav-glass sticky top-0 z-40">
+    <div class="page-shell flex items-center justify-between h-16">
+      <a href="#top" class="flex items-center gap-2.5 group" aria-label="contextq-server home">
+        <img src="./assets/logo.svg" alt="" class="h-7 w-7">
+        <span class="font-mono text-base font-semibold tracking-tight text-ink-950 group-hover:text-indigo-700 transition-colors">contextq-server</span>
+      </a>
+
+      <ul class="hidden md:flex items-center gap-7">
+        <li><a class="nav-link" href="#why">Why</a></li>
+        <li><a class="nav-link" href="#architecture">Architecture</a></li>
+        <li><a class="nav-link" href="#quickstart">Quickstart</a></li>
+        <li><a class="nav-link" href="#api">API</a></li>
+        <li><a class="nav-link" href="#security">Security</a></li>
+      </ul>
+
+      <div class="flex items-center gap-3">
+        <a href="https://contextq.longship.dev" target="_blank" rel="noopener" class="hidden sm:inline-flex items-center gap-1.5 font-body text-xs font-medium text-ink-600 hover:text-indigo-700 transition-colors">
+          contextq
+          <svg viewBox="0 0 12 12" class="h-3 w-3" fill="currentColor" aria-hidden="true"><path d="M3.5 1h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-1 0V2.707L3.354 8.354a.5.5 0 0 1-.708-.708L8.293 2H3.5a.5.5 0 0 1 0-1Z"/></svg>
+        </a>
+        <a href="https://github.com/norlinga/contextq-server" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-lg border border-ink-300 bg-white px-3 py-1.5 text-sm font-medium text-ink-900 transition hover:border-ink-400 hover:bg-ink-50">
+          <svg viewBox="0 0 16 16" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.52-1.04 2.19-.82 2.19-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.74-3.65 3.94.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top">
+
+  <!-- ───── Hero ───── -->
+  <section class="relative overflow-hidden">
+    <div class="hero-grid absolute inset-0 -z-10" aria-hidden="true"></div>
+
+    <div class="page-shell pt-20 pb-24 md:pt-28 md:pb-32">
+      <div class="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+
+        <div>
+          <p class="eyebrow mb-6">Open source · MIT</p>
+
+          <h1 class="font-display font-bold tracking-tight text-ink-950 text-4xl md:text-5xl lg:text-6xl leading-[1.04]">
+            contextq,<br>
+            for agents <span class="text-indigo-700">everywhere</span>.
+          </h1>
+
+          <p class="mt-8 font-body text-lg md:text-xl leading-relaxed text-ink-700">
+            <strong class="text-ink-950 font-semibold">contextq-server</strong> makes local contextq queues available over HTTPS — the same append-only journals, the same FIFO claims, the same <span class="inline-code">item pop</span> protocol. Reachable from CI pipelines, remote workers, and agents on any machine.
+          </p>
+
+          <p class="mt-4 font-body text-sm text-ink-500">
+            New to contextq? <a href="https://contextq.longship.dev" target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-800 underline underline-offset-4">Learn the queue model first →</a>
+          </p>
+
+          <div class="mt-10 flex flex-wrap items-center gap-4">
+            <a href="#quickstart" class="btn-primary">
+              Deploy now
+              <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M10.293 3.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 0 1-1.414-1.414L14.586 11H3a1 1 0 1 1 0-2h11.586l-4.293-4.293a1 1 0 0 1 0-1.414Z"/></svg>
+            </a>
+            <a href="https://github.com/norlinga/contextq-server" target="_blank" rel="noopener" class="btn-secondary">
+              <svg viewBox="0 0 16 16" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.52-1.04 2.19-.82 2.19-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.74-3.65 3.94.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <div class="min-w-0">
+          <div class="terminal-wrap h-full">
+            <button class="copy-btn" data-target="hero-term">Copy</button>
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">~/contextq-release  —  contextq-server</span>
+              </div>
+              <div class="terminal-body" id="hero-term">
+<span class="prompt"></span><span class="token function">contextq-server</span> <span class="token builtin">remote-init</span> <span class="token parameter">-t</span> production \
+    <span class="token parameter">--apply</span> <span class="token parameter">--label</span> my-laptop
+<span class="muted">→ checking remote architecture … linux/amd64</span>
+<span class="muted">→ uploading binaries via SCP …</span>
+<span class="muted">→ converging systemd + caddy …</span>
+<span class="ok">✓ initialized</span>  https://q.example.com
+
+<span class="prompt"></span><span class="token function">contextq-server</span> <span class="token builtin">exec</span> <span class="token parameter">-t</span> production \
+    <span class="token builtin">queue</span> <span class="token builtin">create</span> <span class="token string">"Triage pull requests"</span> <span class="token parameter">--name</span> triage
+<span class="ok">✓ queue created</span>  triage
+
+<span class="prompt"></span><span class="token function">contextq-server</span> <span class="token builtin">exec</span> <span class="token parameter">-t</span> production \
+    <span class="token parameter">--json</span> <span class="token builtin">item</span> <span class="token builtin">pop</span> triage
+<span class="token punctuation">{</span> <span class="token property">"key"</span><span class="token punctuation">:</span> <span class="token string">"pr-4721"</span><span class="token punctuation">,</span> <span class="token property">"state"</span><span class="token punctuation">:</span> <span class="token string">"CLAIMED"</span> <span class="token punctuation">}</span><span class="cursor">▍</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── Why ───── -->
+  <section id="why" class="py-24 md:py-32 border-t border-ink-200 bg-white">
+    <div class="page-shell">
+      <p class="eyebrow mb-5">The extension</p>
+      <h2 class="font-display text-4xl md:text-5xl font-bold tracking-tight text-ink-950 max-w-3xl leading-tight">
+        The queue lives on one machine.<br>Your agents don't have to.
+      </h2>
+      <p class="mt-6 max-w-2xl font-body text-lg leading-relaxed text-ink-700">
+        Local contextq coordinates agents sharing a filesystem. contextq-server adds a minimal network boundary for the cases where that isn't possible — CI runners, temporary workers, and agents on other machines that need the same FIFO protocol without direct filesystem access.
+      </p>
+
+      <div class="mt-14 grid md:grid-cols-3 gap-5">
+        <article class="section-card">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 mb-5">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h3 class="font-display text-xl font-semibold text-ink-950">CI &amp; automation</h3>
+          <p class="mt-3 font-body text-ink-600 leading-relaxed">
+            Push work from a webhook or script on any machine. Claim it from a CI runner. Agents in ephemeral environments participate in the same namespace without shared storage.
+          </p>
+        </article>
+
+        <article class="section-card">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 mb-5">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 12h3m12 0h3M12 3v3m0 12v3m-6.36-2.64 2.12-2.12m8.48 0 2.12 2.12M5.64 5.64l2.12 2.12m8.48 0 2.12-2.12"/></svg>
+          </div>
+          <h3 class="font-display text-xl font-semibold text-ink-950">Remote workers</h3>
+          <p class="mt-3 font-body text-ink-600 leading-relaxed">
+            Temporary or disposable workers — cloud functions, spot instances, scheduled jobs — can pop and complete queue items over HTTPS without a persistent session or filesystem mount.
+          </p>
+        </article>
+
+        <article class="section-card">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 mb-5">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6M9 6h6M9 18h6M4 6h.01M4 12h.01M4 18h.01"/></svg>
+          </div>
+          <h3 class="font-display text-xl font-semibold text-ink-950">Cross-machine coordination</h3>
+          <p class="mt-3 font-body text-ink-600 leading-relaxed">
+            Coordinate work across multiple development machines or teams. One namespace, multiple labeled API keys — one per machine or service, each independently revocable without a restart.
+          </p>
+        </article>
+      </div>
+
+      <div class="mt-12 rounded-2xl bg-ink-950 px-8 py-10 md:px-12 md:py-14 shadow-card">
+        <p class="eyebrow text-indigo-300 mb-6">What doesn't change</p>
+        <blockquote class="font-display text-2xl md:text-3xl leading-snug md:leading-snug text-white/95 max-w-4xl">
+          "contextq-server is a transport layer, not a new queue engine. The underlying queue remains ordinary contextq: append-only journals, filesystem locks, FIFO claims, and files an operator can inspect directly."
+        </blockquote>
+        <p class="mt-6 font-body text-sm text-white/50 max-w-3xl leading-relaxed">
+          The <span class="text-indigo-300 font-mono">item pop</span> protocol, the lifecycle state machine, the agent-facing queue context — all of it is defined by <a href="https://contextq.longship.dev" target="_blank" rel="noopener" class="text-indigo-300 hover:text-indigo-200 underline-offset-4 hover:underline">contextq</a>. contextq-server adds only the network and operational boundary.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── Architecture ───── -->
+  <section id="architecture" class="py-24 md:py-32 border-t border-ink-200">
+    <div class="page-shell">
+      <p class="eyebrow mb-5">How it works</p>
+      <h2 class="font-display text-4xl md:text-5xl font-bold tracking-tight text-ink-950 max-w-3xl leading-tight">
+        A thin transport layer.
+      </h2>
+      <p class="mt-6 max-w-2xl font-body text-lg leading-relaxed text-ink-700">
+        contextq-server doesn't implement a new queue engine. It validates a bearer key, allowlists the command arguments, executes contextq as a subprocess, and returns the result. The filesystem journals are the only state.
+      </p>
+
+      <div class="mt-14 grid lg:grid-cols-2 gap-10 items-start">
+
+        <!-- Diagram -->
+        <div class="rounded-xl border border-ink-200 bg-white p-8 shadow-card">
+          <div class="space-y-2">
+            <div class="rounded-lg border border-indigo-200 bg-indigo-50/60 px-5 py-4">
+              <p class="font-mono text-xs text-indigo-600 font-semibold mb-1">REMOTE AGENT</p>
+              <p class="font-body text-sm text-indigo-900">CI runner · remote worker · any machine</p>
+            </div>
+
+            <div class="flex items-center gap-3 px-2 py-1">
+              <div class="h-px flex-1 bg-ink-200"></div>
+              <span class="font-mono text-xs text-ink-500 shrink-0">HTTPS · Bearer key</span>
+              <div class="h-px flex-1 bg-ink-200"></div>
+            </div>
+
+            <div class="rounded-lg border border-ink-200 bg-ink-50/60 px-5 py-4">
+              <p class="font-mono text-xs text-ink-500 font-semibold mb-1">CADDY</p>
+              <p class="font-body text-sm text-ink-700">TLS termination · reverse proxy</p>
+            </div>
+
+            <div class="flex items-center gap-3 px-2 py-1">
+              <div class="h-px flex-1 bg-ink-200"></div>
+              <span class="font-mono text-xs text-ink-500 shrink-0">loopback 127.0.0.1:8787</span>
+              <div class="h-px flex-1 bg-ink-200"></div>
+            </div>
+
+            <div class="rounded-lg border-2 border-indigo-300 bg-white px-5 py-4">
+              <p class="font-mono text-xs text-indigo-700 font-semibold mb-1">CONTEXTQ-SERVER</p>
+              <p class="font-body text-sm text-ink-700">validate key · allowlist args · exec subprocess</p>
+            </div>
+
+            <div class="flex items-center gap-3 px-2 py-1">
+              <div class="h-px flex-1 bg-ink-200"></div>
+              <span class="font-mono text-xs text-ink-500 shrink-0">exec.CommandContext</span>
+              <div class="h-px flex-1 bg-ink-200"></div>
+            </div>
+
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50/60 px-5 py-4">
+              <p class="font-mono text-xs text-emerald-700 font-semibold mb-1">CONTEXTQ CLI</p>
+              <p class="font-body text-sm text-emerald-900">filesystem journals · FIFO locks · JSONL events</p>
+              <p class="font-mono text-xs text-emerald-600 mt-1">/var/contextq/{namespace}/contextq/</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Properties -->
+        <div class="space-y-5">
+          <div class="rounded-xl border border-ink-200 bg-white p-6">
+            <h3 class="font-display text-xl font-semibold text-ink-950">No new state</h3>
+            <p class="mt-3 font-body text-ink-600 leading-relaxed">
+              There is no database, daemon queue implementation, or server-side cache. All queue state lives in contextq's <span class="inline-code">events.jsonl</span> files on the server's filesystem — the same files an operator can <span class="inline-code">cat</span> and inspect directly.
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-ink-200 bg-white p-6">
+            <h3 class="font-display text-xl font-semibold text-ink-950">No shell execution</h3>
+            <p class="mt-3 font-body text-ink-600 leading-relaxed">
+              Remote arguments pass through an explicit allowlist before reaching <span class="inline-code">exec.CommandContext</span>. There is no shell interpolation. Server-controlled flags like <span class="inline-code">--root</span> and <span class="inline-code">--json</span> cannot be overridden by the caller.
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-ink-200 bg-white p-6">
+            <h3 class="font-display text-xl font-semibold text-ink-950">TLS via Caddy</h3>
+            <p class="mt-3 font-body text-ink-600 leading-relaxed">
+              contextq-server binds to <span class="inline-code">127.0.0.1:8787</span> by default. Caddy handles TLS and reverse proxying. The bootstrap refuses to configure a public listen address.
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-ink-200 bg-white p-6">
+            <h3 class="font-display text-xl font-semibold text-ink-950">Concurrency preserved</h3>
+            <p class="mt-3 font-body text-ink-600 leading-relaxed">
+              contextq's per-queue filesystem lock remains authoritative. <span class="inline-code">item pop</span> retains its atomic FIFO claim behavior even when multiple remote agents call the server concurrently.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── Quickstart ───── -->
+  <section id="quickstart" class="py-24 md:py-32 border-t border-ink-200 bg-white">
+    <div class="page-shell">
+      <p class="eyebrow mb-5">Quickstart</p>
+      <h2 class="font-display text-4xl md:text-5xl font-bold tracking-tight text-ink-950 max-w-3xl leading-tight">
+        Deploy in five steps.
+      </h2>
+      <p class="mt-6 max-w-2xl font-body text-lg leading-relaxed text-ink-700">
+        The controller runs locally. It builds the Linux binaries, uploads them to your VPS over SSH, and bootstraps the service — systemd unit, Caddy config, namespace, and key included.
+      </p>
+
+      <div class="mt-10 rounded-xl border border-amber-200 bg-amber-50/80 p-5 max-w-3xl">
+        <p class="font-body text-sm text-amber-950 leading-relaxed">
+          <strong class="font-semibold">Prerequisites:</strong> a Linux VPS with root SSH access, Caddy installed and running, and a DNS record pointing at it. The bootstrap has been exercised on standard systemd distributions (Debian, Ubuntu, Arch).
+        </p>
+      </div>
+
+      <div class="mt-12 grid lg:grid-cols-2 gap-10">
+
+        <!-- Step 01: Build -->
+        <div>
+          <div class="flex items-baseline gap-3 mb-4">
+            <span class="font-mono text-xs text-indigo-600 font-semibold">01</span>
+            <h3 class="font-display text-2xl font-semibold text-ink-950">Build</h3>
+          </div>
+          <p class="font-body text-ink-600 leading-relaxed mb-5">
+            Build a local controller binary and a Linux deployment bundle matching your VPS architecture. Requires Go 1.24+.
+          </p>
+          <div class="terminal-wrap">
+            <button class="copy-btn" data-target="t-build">Copy</button>
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span><span class="terminal-dot yellow"></span><span class="terminal-dot green"></span>
+                <span class="terminal-title">build</span>
+              </div>
+              <div class="terminal-body" id="t-build">
+<span class="prompt"></span><span class="token function">git</span> <span class="token builtin">clone</span> https://github.com/norlinga/contextq-server
+<span class="prompt"></span><span class="token function">make</span> release <span class="token assign-left">TARGET_GOARCH</span>=amd64
+
+<span class="ok">→</span> <span class="keylit">dist/contextq-server</span>               <span class="muted">(controller)</span>
+<span class="ok">→</span> <span class="keylit">dist/linux-amd64/contextq-server</span>  <span class="muted">(server binary)</span>
+<span class="ok">→</span> <span class="keylit">dist/linux-amd64/contextq</span>         <span class="muted">(contextq runtime)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 02: Target -->
+        <div>
+          <div class="flex items-baseline gap-3 mb-4">
+            <span class="font-mono text-xs text-indigo-600 font-semibold">02</span>
+            <h3 class="font-display text-2xl font-semibold text-ink-950">Add a target</h3>
+          </div>
+          <p class="font-body text-ink-600 leading-relaxed mb-5">
+            Save the public URL, namespace, and SSH destination locally. The target file (<span class="inline-code">~/.contextq-server</span>) is mode 0600 because it stores the API key.
+          </p>
+          <div class="terminal-wrap">
+            <button class="copy-btn" data-target="t-target">Copy</button>
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span><span class="terminal-dot yellow"></span><span class="terminal-dot green"></span>
+                <span class="terminal-title">target add</span>
+              </div>
+              <div class="terminal-body" id="t-target">
+<span class="prompt"></span><span class="token function">dist/contextq-server</span> <span class="token builtin">target</span> <span class="token builtin">add</span> \
+    <span class="token parameter">--url</span> https://q.example.com \
+    <span class="token parameter">--namespace</span> personal \
+    <span class="token parameter">--ssh-host</span> example.com \
+    <span class="token parameter">--ssh-user</span> root \
+    <span class="token parameter">--use</span> production
+
+<span class="ok">✓ target saved</span>  production
+  <span class="muted">url        </span> <span class="keylit">https://q.example.com</span>
+  <span class="muted">namespace  </span> <span class="keylit">personal</span>
+  <span class="muted">ssh-host   </span> <span class="keylit">example.com</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 03: Remote init -->
+        <div>
+          <div class="flex items-baseline gap-3 mb-4">
+            <span class="font-mono text-xs text-indigo-600 font-semibold">03</span>
+            <h3 class="font-display text-2xl font-semibold text-ink-950">Bootstrap the server</h3>
+          </div>
+          <p class="font-body text-ink-600 leading-relaxed mb-5">
+            Upload the binaries, converge the service identity, systemd unit, and Caddy config, issue an API key, and store it in the local target file.
+          </p>
+          <div class="terminal-wrap">
+            <button class="copy-btn" data-target="t-init">Copy</button>
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span><span class="terminal-dot yellow"></span><span class="terminal-dot green"></span>
+                <span class="terminal-title">remote-init</span>
+              </div>
+              <div class="terminal-body" id="t-init">
+<span class="prompt"></span><span class="token function">dist/contextq-server</span> <span class="token builtin">remote-init</span> \
+    <span class="token parameter">-t</span> production <span class="token parameter">--apply</span> \
+    <span class="token parameter">--label</span> my-laptop
+
+<span class="muted">→ checking remote architecture … linux/amd64</span>
+<span class="muted">→ uploading binaries via SCP …</span>
+<span class="muted">→ converging service identity …</span>
+<span class="muted">→ converging systemd unit …</span>
+<span class="muted">→ converging caddy snippet …</span>
+<span class="muted">→ issuing namespace key …</span>
+<span class="ok">✓ initialized</span>  label: my-laptop
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 04: Doctor -->
+        <div>
+          <div class="flex items-baseline gap-3 mb-4">
+            <span class="font-mono text-xs text-indigo-600 font-semibold">04</span>
+            <h3 class="font-display text-2xl font-semibold text-ink-950">Verify</h3>
+          </div>
+          <p class="font-body text-ink-600 leading-relaxed mb-5">
+            Run the diagnostic check to confirm HTTPS, SSH, systemd, Caddy validity, and authenticated API access are all healthy.
+          </p>
+          <div class="terminal-wrap">
+            <button class="copy-btn" data-target="t-doctor">Copy</button>
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span><span class="terminal-dot yellow"></span><span class="terminal-dot green"></span>
+                <span class="terminal-title">doctor</span>
+              </div>
+              <div class="terminal-body" id="t-doctor">
+<span class="prompt"></span><span class="token function">dist/contextq-server</span> <span class="token builtin">doctor</span> <span class="token parameter">-t</span> production
+
+  <span class="muted">https endpoint  </span><span class="ok">✓ ok</span>
+  <span class="muted">ssh             </span><span class="ok">✓ ok</span>
+  <span class="muted">systemd         </span><span class="ok">✓ active (running)</span>
+  <span class="muted">binaries        </span><span class="ok">✓ present</span>
+  <span class="muted">caddyfile       </span><span class="ok">✓ valid</span>
+  <span class="muted">namespace key   </span><span class="ok">✓ authenticated</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 05: Exec -->
+        <div class="lg:col-span-2">
+          <div class="flex items-baseline gap-3 mb-4">
+            <span class="font-mono text-xs text-indigo-600 font-semibold">05</span>
+            <h3 class="font-display text-2xl font-semibold text-ink-950">Execute contextq commands</h3>
+          </div>
+          <p class="font-body text-ink-600 leading-relaxed mb-5">
+            Use <span class="inline-code">exec</span> to run any contextq queue or item command against the remote namespace. The full contextq vocabulary is available — create queues, push work, pop and complete items.
+          </p>
+          <div class="terminal-wrap">
+            <button class="copy-btn" data-target="t-exec">Copy</button>
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span><span class="terminal-dot yellow"></span><span class="terminal-dot green"></span>
+                <span class="terminal-title">exec</span>
+              </div>
+              <div class="terminal-body" id="t-exec">
+<span class="prompt"></span><span class="token function">contextq-server</span> <span class="token builtin">exec</span> <span class="token parameter">-t</span> production <span class="token builtin">queue</span> <span class="token builtin">create</span> \
+    <span class="token string">"Claim work only with item pop. Update every claimed item promptly."</span> \
+    <span class="token parameter">--name</span> release
+
+<span class="ok">✓ queue created</span>  release
+
+<span class="prompt"></span><span class="token function">contextq-server</span> <span class="token builtin">exec</span> <span class="token parameter">-t</span> production <span class="token builtin">item</span> <span class="token builtin">push</span> release <span class="keylit">issue-123</span>
+<span class="prompt"></span><span class="token function">contextq-server</span> <span class="token builtin">exec</span> <span class="token parameter">-t</span> production <span class="token builtin">item</span> <span class="token builtin">push</span> release <span class="keylit">issue-124</span>
+
+<span class="prompt"></span><span class="token function">contextq-server</span> <span class="token builtin">exec</span> <span class="token parameter">-t</span> production <span class="token parameter">--json</span> <span class="token builtin">item</span> <span class="token builtin">pop</span> release
+<span class="token punctuation">{</span> <span class="token property">"key"</span><span class="token punctuation">:</span> <span class="token string">"issue-123"</span><span class="token punctuation">,</span> <span class="token property">"state"</span><span class="token punctuation">:</span> <span class="token string">"CLAIMED"</span> <span class="token punctuation">}</span>
+
+<span class="prompt"></span><span class="token function">contextq-server</span> <span class="token builtin">exec</span> <span class="token parameter">-t</span> production <span class="token builtin">item</span> <span class="token builtin">update</span> release <span class="keylit">issue-123</span> <span class="ok">DONE</span>
+<span class="ok">✓ DONE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── API ───── -->
+  <section id="api" class="py-24 md:py-32 border-t border-ink-200">
+    <div class="page-shell">
+      <p class="eyebrow mb-5">HTTP API</p>
+      <h2 class="font-display text-4xl md:text-5xl font-bold tracking-tight text-ink-950 max-w-3xl leading-tight">
+        One endpoint. The full contextq vocabulary.
+      </h2>
+      <p class="mt-6 max-w-2xl font-body text-lg leading-relaxed text-ink-700">
+        The HTTP surface is intentionally small: a health check and one command RPC. Responses are contextq's own JSON output — no server envelope.
+      </p>
+
+      <div class="mt-14 grid lg:grid-cols-2 gap-10 items-start">
+
+        <div class="space-y-5">
+          <!-- Command endpoint -->
+          <div class="rounded-xl border border-ink-200 bg-white p-6">
+            <h3 class="font-display text-xl font-semibold text-ink-950 mb-4">Command RPC</h3>
+            <code class="block font-mono text-sm text-indigo-700 bg-indigo-50/60 rounded-lg px-4 py-3 mb-4 border border-indigo-100">POST /v1/{namespace}/exec</code>
+            <dl class="space-y-2.5 font-body text-sm text-ink-700 mb-5">
+              <div class="flex gap-3">
+                <dt class="inline-code shrink-0">Authorization</dt>
+                <dd>Bearer &lt;namespace-key&gt;</dd>
+              </div>
+              <div class="flex gap-3">
+                <dt class="inline-code shrink-0">Content-Type</dt>
+                <dd>application/json</dd>
+              </div>
+            </dl>
+            <p class="font-body text-sm font-medium text-ink-700 mb-2">Request body:</p>
+            <pre class="rounded-lg bg-ink-50 border border-ink-200 px-4 py-3 font-mono text-sm text-ink-800 overflow-x-auto mb-4">{"args": ["item", "pop", "release"]}</pre>
+            <p class="font-body text-xs text-ink-500 mb-2">Exposed command families (body limited to 64 KiB and 64 args):</p>
+            <pre class="rounded-lg bg-ink-50 border border-ink-200 px-4 py-3 font-mono text-xs text-ink-700">queue  create | list | read | destroy
+item   push | pop | list | read | update | history</pre>
+          </div>
+
+          <!-- Health -->
+          <div class="rounded-xl border border-ink-200 bg-white p-6">
+            <h3 class="font-display text-lg font-semibold text-ink-950 mb-3">Health</h3>
+            <code class="block font-mono text-sm text-ink-700 bg-ink-50 rounded-lg px-4 py-2 mb-3 border border-ink-200">GET /healthz</code>
+            <p class="font-body text-sm text-ink-600">No authentication required. Returns <span class="inline-code">{"status":"ok"}</span> when the HTTP process is serving requests.</p>
+          </div>
+
+          <!-- Status codes -->
+          <div class="rounded-xl border border-ink-200 bg-white p-6">
+            <h3 class="font-display text-lg font-semibold text-ink-950 mb-4">Status codes</h3>
+            <dl class="space-y-2.5 font-body text-sm text-ink-700">
+              <div class="flex gap-3">
+                <dt class="inline-code shrink-0 text-emerald-700">200</dt>
+                <dd>contextq command succeeded</dd>
+              </div>
+              <div class="flex gap-3">
+                <dt class="inline-code shrink-0">400</dt>
+                <dd>Invalid request, protected argument, or CLI validation error</dd>
+              </div>
+              <div class="flex gap-3">
+                <dt class="inline-code shrink-0 text-rose-700">401</dt>
+                <dd>Missing or invalid namespace key</dd>
+              </div>
+              <div class="flex gap-3">
+                <dt class="inline-code shrink-0">404</dt>
+                <dd>Queue not found in this namespace</dd>
+              </div>
+              <div class="flex gap-3">
+                <dt class="inline-code shrink-0 text-amber-700">409</dt>
+                <dd>Coordination conflict — no available item, invalid state transition</dd>
+              </div>
+              <div class="flex gap-3">
+                <dt class="inline-code shrink-0">502</dt>
+                <dd>contextq could not execute or returned invalid output</dd>
+              </div>
+              <div class="flex gap-3">
+                <dt class="inline-code shrink-0">504</dt>
+                <dd>Command exceeded its request timeout</dd>
+              </div>
+            </dl>
+            <p class="mt-4 font-body text-xs text-ink-500">
+              Expected failures preserve contextq's JSON shape: <span class="inline-code">{"code":"no_available_items","error":"..."}</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="space-y-5">
+          <!-- Curl example -->
+          <div class="terminal-wrap">
+            <button class="copy-btn" data-target="t-curl">Copy</button>
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span><span class="terminal-dot yellow"></span><span class="terminal-dot green"></span>
+                <span class="terminal-title">curl example</span>
+              </div>
+              <div class="terminal-body" id="t-curl">
+<span class="muted"># read the namespace key from the local target file</span>
+<span class="prompt"></span><span class="token assign-left">KEY</span>="<span class="token function">$</span>(<span class="token function">jq</span> <span class="token parameter">-r</span> \
+    <span class="token string">'.targets.production.key'</span> \
+    <span class="token string">"$HOME/.contextq-server"</span>)"
+
+<span class="prompt"></span><span class="token function">curl</span> <span class="token parameter">-sS</span> https://q.example.com/v1/personal/exec \
+    <span class="token parameter">-H</span> <span class="token string">"Authorization: Bearer $KEY"</span> \
+    <span class="token parameter">-H</span> <span class="token string">'Content-Type: application/json'</span> \
+    <span class="token parameter">--data</span> <span class="token string">'{"args":["item","pop","release"]}'</span>
+<span class="token punctuation">{</span>
+  <span class="token property">"key"</span><span class="token punctuation">:</span>     <span class="token string">"issue-123"</span><span class="token punctuation">,</span>
+  <span class="token property">"state"</span><span class="token punctuation">:</span>   <span class="token string">"CLAIMED"</span><span class="token punctuation">,</span>
+  <span class="token property">"item_id"</span><span class="token punctuation">:</span> <span class="token string">"a14b9e02-…-01c9"</span>
+<span class="token punctuation">}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error response example -->
+          <div class="terminal-wrap">
+            <button class="copy-btn" data-target="t-error">Copy</button>
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span><span class="terminal-dot yellow"></span><span class="terminal-dot green"></span>
+                <span class="terminal-title">error response (409)</span>
+              </div>
+              <div class="terminal-body" id="t-error">
+<span class="muted"># contextq coordination errors preserve the JSON shape</span>
+<span class="prompt"></span><span class="token function">curl</span> <span class="token parameter">-sS</span> <span class="token parameter">-w</span> <span class="token string">'\nHTTP %{http_code}'</span> \
+    https://q.example.com/v1/personal/exec \
+    <span class="token parameter">-H</span> <span class="token string">"Authorization: Bearer $KEY"</span> \
+    <span class="token parameter">-H</span> <span class="token string">'Content-Type: application/json'</span> \
+    <span class="token parameter">--data</span> <span class="token string">'{"args":["item","pop","empty-queue"]}'</span>
+<span class="token punctuation">{</span>
+  <span class="token property">"code"</span><span class="token punctuation">:</span>  <span class="token string">"no_available_items"</span><span class="token punctuation">,</span>
+  <span class="token property">"error"</span><span class="token punctuation">:</span> <span class="token string">"no available items"</span>
+<span class="token punctuation">}</span>
+<span class="muted">HTTP 409</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-5">
+            <p class="font-body text-sm text-indigo-900 leading-relaxed">
+              <strong class="font-semibold">Looping agents:</strong> the server returns <span class="inline-code">no_available_items</span> immediately rather than holding the connection open. A looping agent should pop, work, update, then use bounded backoff before trying again.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── Security ───── -->
+  <section id="security" class="py-24 md:py-32 border-t border-ink-200 bg-white">
+    <div class="page-shell">
+      <p class="eyebrow mb-5">Security model</p>
+      <h2 class="font-display text-4xl md:text-5xl font-bold tracking-tight text-ink-950 max-w-3xl leading-tight">
+        Namespace-isolated.<br>Immediately revocable.
+      </h2>
+      <p class="mt-6 max-w-2xl font-body text-lg leading-relaxed text-ink-700">
+        Each API key grants broad access to one namespace. Multiple labeled keys make it straightforward to add an agent — and later identify exactly which credential to revoke.
+      </p>
+
+      <div class="mt-14 grid md:grid-cols-3 gap-5">
+        <article class="section-card">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 mb-5">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3 class="font-display text-xl font-semibold text-ink-950">Namespace isolation</h3>
+          <p class="mt-3 font-body text-ink-600 leading-relaxed">
+            Each namespace has independent queue journals and API keys. A key from one namespace cannot authenticate to another. Authentication failures do not reveal whether a namespace exists.
+          </p>
+        </article>
+
+        <article class="section-card">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 mb-5">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          </div>
+          <h3 class="font-display text-xl font-semibold text-ink-950">Bearer keys</h3>
+          <p class="mt-3 font-body text-ink-600 leading-relaxed">
+            256-bit random secrets with immutable IDs and required labels. Only SHA-256 digests are stored remotely. Constant-time comparison prevents timing attacks. Revocation is effective immediately — no restart required.
+          </p>
+        </article>
+
+        <article class="section-card">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 mb-5">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3 class="font-display text-xl font-semibold text-ink-950">TLS via Caddy</h3>
+          <p class="mt-3 font-body text-ink-600 leading-relaxed">
+            contextq-server binds to <span class="inline-code">127.0.0.1:8787</span> by default. Caddy handles TLS and certificate provisioning. The bootstrap refuses to configure a public listen address. Credentials are never forwarded on redirect.
+          </p>
+        </article>
+      </div>
+
+      <div class="mt-12 grid md:grid-cols-2 gap-5">
+        <div class="rounded-xl border border-ink-200 bg-ink-50/60 p-6">
+          <h4 class="font-display text-lg font-semibold text-ink-950">Key management</h4>
+          <div class="mt-4 terminal-wrap">
+            <div class="terminal" style="font-size:0.8rem;">
+              <div class="terminal-body" style="padding:1rem 1.25rem;">
+<span class="muted"># issue a key for a CI runner (don't overwrite local key)</span>
+<span class="prompt"></span><span class="token function">contextq-server</span> <span class="token builtin">remote</span> <span class="token builtin">key</span> <span class="token builtin">add</span> <span class="token parameter">-t</span> production \
+    <span class="token parameter">--label</span> github-actions <span class="token parameter">--no-save</span>
+<span class="keylit">cqk_k_4d172bc1…_[secret printed once]</span>
+
+<span class="muted"># revoke by the key's immutable ID</span>
+<span class="prompt"></span><span class="token function">contextq-server</span> <span class="token builtin">remote</span> <span class="token builtin">key</span> <span class="token builtin">revoke</span> \
+    <span class="token parameter">-t</span> production <span class="keylit">k_4d172bc156d1</span>
+<span class="ok">✓ revoked</span>  effective immediately, no restart needed
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-ink-200 bg-ink-50/60 p-6">
+          <h4 class="font-display text-lg font-semibold text-ink-950">Deliberately absent</h4>
+          <ul class="mt-4 space-y-2 font-body text-sm text-ink-600">
+            <li class="flex gap-2.5"><span class="text-ink-400 shrink-0 mt-0.5">·</span>Per-command key scopes</li>
+            <li class="flex gap-2.5"><span class="text-ink-400 shrink-0 mt-0.5">·</span>Public namespace or key administration API</li>
+            <li class="flex gap-2.5"><span class="text-ink-400 shrink-0 mt-0.5">·</span>Long polling or WebSockets</li>
+            <li class="flex gap-2.5"><span class="text-ink-400 shrink-0 mt-0.5">·</span>Leases, heartbeats, or visibility timeouts</li>
+            <li class="flex gap-2.5"><span class="text-ink-400 shrink-0 mt-0.5">·</span>Multi-host consensus or failover</li>
+            <li class="flex gap-2.5"><span class="text-ink-400 shrink-0 mt-0.5">·</span>Web dashboard</li>
+          </ul>
+          <p class="mt-4 font-body text-xs text-ink-500">These omissions keep the service inspectable and small. Add only when a concrete workflow requires it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── Footer ───── -->
+  <footer class="border-t border-ink-200 bg-white">
+    <div class="page-shell py-16">
+      <div class="grid md:grid-cols-3 gap-10">
+
+        <div class="md:col-span-2 max-w-md">
+          <div class="flex items-center gap-3 mb-4">
+            <img src="./assets/logo.svg" class="h-8 w-8" alt="">
+            <span class="font-mono text-base font-semibold tracking-tight text-ink-950">contextq-server</span>
+          </div>
+          <p class="font-body text-sm text-ink-600 leading-relaxed">
+            A transport and operations layer around <a href="https://contextq.longship.dev" target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-800 underline-offset-2 hover:underline">contextq</a>. Namespace-isolated, bearer-key authenticated, deployable on any Linux VPS with Caddy. No new queue engine — just files and a small HTTP server.
+          </p>
+        </div>
+
+        <div>
+          <p class="eyebrow mb-4 text-ink-400">Project</p>
+          <ul class="space-y-2 font-body text-sm text-ink-600">
+            <li><a href="https://github.com/norlinga/contextq-server" target="_blank" rel="noopener" class="hover:text-ink-950 transition">GitHub repository</a></li>
+            <li><a href="https://github.com/norlinga/contextq-server/blob/main/docs/installation.md" target="_blank" rel="noopener" class="hover:text-ink-950 transition">Installation guide</a></li>
+            <li><a href="https://github.com/norlinga/contextq-server/blob/main/docs/api.md" target="_blank" rel="noopener" class="hover:text-ink-950 transition">HTTP API reference</a></li>
+            <li><a href="https://github.com/norlinga/contextq-server/blob/main/docs/security.md" target="_blank" rel="noopener" class="hover:text-ink-950 transition">Security model</a></li>
+            <li><a href="https://github.com/norlinga/contextq-server/blob/main/LICENSE" target="_blank" rel="noopener" class="hover:text-ink-950 transition">License (MIT)</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- contextq callout -->
+      <div class="mt-10 pt-8 border-t border-ink-200">
+        <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <p class="font-display text-base font-semibold text-ink-950">New to contextq?</p>
+            <p class="font-body text-sm text-ink-600 mt-1">contextq-server builds on contextq — local queues, FIFO claims, agent-facing context, durable journals. Learn the underlying queue model first.</p>
+          </div>
+          <a href="https://contextq.longship.dev" target="_blank" rel="noopener" class="shrink-0 btn-secondary text-sm">
+            contextq.longship.dev
+            <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M10.293 3.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 0 1-1.414-1.414L14.586 11H3a1 1 0 1 1 0-2h11.586l-4.293-4.293a1 1 0 0 1 0-1.414Z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="mt-8 pt-8 border-t border-ink-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <p class="font-body text-xs text-ink-400">© <span id="year"></span> Aaron Norling. MIT licensed.</p>
+        <p class="font-body text-xs text-ink-400">
+          Built on <a href="https://contextq.longship.dev" class="hover:text-ink-600 transition underline-offset-2 hover:underline">contextq</a>.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  </main>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const navLinks = Array.from(document.querySelectorAll('.nav-link'));
+    const sectionIds = navLinks.map(a => a.getAttribute('href').slice(1));
+    const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+
+    function setActive(id) {
+      navLinks.forEach(a => {
+        a.dataset.active = (a.getAttribute('href') === '#' + id) ? 'true' : 'false';
+      });
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter(e => e.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible.length > 0) {
+        setActive(visible[0].target.id);
+      }
+    }, {
+      rootMargin: '-25% 0px -65% 0px',
+      threshold: 0,
+    });
+
+    sections.forEach(s => observer.observe(s));
+
+    navLinks.forEach(a => {
+      a.addEventListener('click', () => {
+        const id = a.getAttribute('href').slice(1);
+        setActive(id);
+      });
+    });
+
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const targetId = btn.dataset.target;
+        const target = document.getElementById(targetId);
+        if (!target) return;
+        const text = target.innerText.replace(/ /g, ' ');
+        try {
+          await navigator.clipboard.writeText(text);
+          const original = btn.textContent;
+          btn.classList.add('copied');
+          btn.textContent = 'Copied';
+          setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.textContent = original;
+          }, 1400);
+        } catch (e) {
+          btn.textContent = 'Err';
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

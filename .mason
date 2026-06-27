@@ -1,0 +1,11 @@
+default: contextq-server.longship.dev
+
+targets:
+  contextq-server.longship.dev:
+    host: longship.dev
+    user: mason
+    root: /var/www/contextq-server.longship.dev
+    base_url: https://contextq-server.longship.dev
+    deploy:
+      build_dir: ./
+      remote_path: /var/www/contextq-server.longship.dev
